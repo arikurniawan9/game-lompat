@@ -1,1033 +1,969 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lompat Poin - Epic Boss Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #0f172a;
-        overflow: hidden;
-        font-family: "Inter", sans-serif;
-        touch-action: none;
-      }
-      canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        transition: background-color 1s ease; /* Transisi warna latar antar level */
-      }
-      .ui-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-      }
-      .interactive {
-        pointer-events: auto;
-      }
-      .text-glow {
-        text-shadow: 0 0 10px currentColor;
-      }
-      .btn-glow {
-        box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
-        transition: all 0.3s ease;
-      }
-      .btn-glow:hover {
-        box-shadow: 0 0 25px rgba(34, 211, 238, 0.8);
-        transform: scale(1.05);
-      }
-      /* Animasi Pop in/out untuk pengumuman level */
-      .level-announce {
-        animation: popInAndOut 2.5s ease-in-out forwards;
-      }
-      @keyframes popInAndOut {
-        0% {
-          transform: translate(-50%, -50%) scale(0.5);
-          opacity: 0;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a; 
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            touch-action: none; 
         }
-        20% {
-          transform: translate(-50%, -50%) scale(1.2);
-          opacity: 1;
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            transition: background-color 1s ease; /* Transisi warna latar antar level */
         }
-        30% {
-          transform: translate(-50%, -50%) scale(1);
-          opacity: 1;
-          text-shadow: 0 0 30px white;
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        80% {
-          transform: translate(-50%, -50%) scale(1);
-          opacity: 1;
+        .interactive {
+            pointer-events: auto;
         }
-        100% {
-          transform: translate(-50%, -50%) scale(1.5);
-          opacity: 0;
+        .text-glow {
+            text-shadow: 0 0 10px currentColor;
         }
-      }
-      .shake {
-        animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-      }
-      @keyframes shake {
-        10%,
-        90% {
-          transform: translate3d(-1px, 0, 0);
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+            transition: all 0.3s ease;
         }
-        20%,
-        80% {
-          transform: translate3d(2px, 0, 0);
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.8);
+            transform: scale(1.05);
         }
-        30%,
-        50%,
-        70% {
-          transform: translate3d(-4px, 0, 0);
+        /* Animasi Pop in/out untuk pengumuman level */
+        .level-announce {
+            animation: popInAndOut 2.5s ease-in-out forwards;
         }
-        40%,
-        60% {
-          transform: translate3d(4px, 0, 0);
+        @keyframes popInAndOut {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); opacity: 1; text-shadow: 0 0 30px white; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
         }
-      }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
+
     <!-- Elemen Canvas -->
     <canvas id="gameCanvas"></canvas>
 
     <!-- UI Layer -->
     <div class="ui-layer" id="uiLayer">
-      <!-- HUD Utama -->
-      <div
-        id="hud"
-        class="absolute top-6 left-6 w-full flex justify-between pr-12 hidden"
-      >
-        <div class="flex flex-col">
-          <div
-            class="text-white text-3xl font-black tracking-wider drop-shadow-md"
-          >
-            SKOR:
-            <span id="scoreDisplay" class="text-cyan-400 text-glow">0</span>
-          </div>
-          <div
-            class="text-white text-xl font-bold tracking-wider drop-shadow-md"
-          >
-            LEVEL:
-            <span id="levelDisplay" class="text-purple-400 text-glow">1</span>
-          </div>
+        
+        <!-- HUD Utama -->
+        <div id="hud" class="absolute top-6 left-6 w-full flex justify-between pr-12 hidden">
+            <div class="flex flex-col">
+                <div class="text-white text-3xl font-black tracking-wider drop-shadow-md">
+                    SKOR: <span id="scoreDisplay" class="text-cyan-400 text-glow">0</span>
+                </div>
+                <div class="text-white text-xl font-bold tracking-wider drop-shadow-md">
+                    LEVEL: <span id="levelDisplay" class="text-purple-400 text-glow">1</span>
+                </div>
+            </div>
+            <div class="text-slate-300 text-xl font-bold tracking-wider pt-1 mr-6">
+                TERTINGGI: <span id="highScoreHudDisplay" class="text-yellow-400">0</span>
+            </div>
         </div>
-        <div class="text-slate-300 text-xl font-bold tracking-wider pt-1 mr-6">
-          TERTINGGI:
-          <span id="highScoreHudDisplay" class="text-yellow-400">0</span>
-        </div>
-      </div>
 
-      <!-- UI Bar Darah Bos (Sembunyi by default) -->
-      <div
-        id="bossUI"
-        class="absolute top-8 left-1/2 transform -translate-x-1/2 w-3/4 md:w-1/2 hidden flex-col items-center"
-      >
-        <div
-          class="text-rose-500 font-black mb-1 tracking-[0.2em] text-lg text-glow"
-        >
-          SISTEM INTI BOS
+        <!-- UI Bar Darah Bos (Sembunyi by default) -->
+        <div id="bossUI" class="absolute top-8 left-1/2 transform -translate-x-1/2 w-3/4 md:w-1/2 hidden flex-col items-center">
+            <div class="text-rose-500 font-black mb-1 tracking-[0.2em] text-lg text-glow">SISTEM INTI BOS</div>
+            <div class="w-full bg-slate-900 h-6 rounded-full border-2 border-slate-700 overflow-hidden shadow-[0_0_20px_rgba(225,29,72,0.6)]">
+                <div id="bossHealthBar" class="bg-gradient-to-r from-red-600 to-rose-400 h-full w-full transition-all duration-300 ease-out origin-left"></div>
+            </div>
         </div>
-        <div
-          class="w-full bg-slate-900 h-6 rounded-full border-2 border-slate-700 overflow-hidden shadow-[0_0_20px_rgba(225,29,72,0.6)]"
-        >
-          <div
-            id="bossHealthBar"
-            class="bg-gradient-to-r from-red-600 to-rose-400 h-full w-full transition-all duration-300 ease-out origin-left"
-          ></div>
-        </div>
-      </div>
 
-      <!-- Pengumuman Teks (Naik Level / Bos Muncul) -->
-      <div
-        id="levelAnnouncer"
-        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl md:text-7xl font-black text-white pointer-events-none opacity-0"
-      >
-        LEVEL 1
-      </div>
-
-      <!-- Menu Utama -->
-      <div
-        id="startMenu"
-        class="interactive flex flex-col items-center bg-slate-900/80 p-10 rounded-3xl border border-slate-700 backdrop-blur-sm"
-      >
-        <h1
-          class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2 drop-shadow-lg text-center"
-        >
-          LOMPAT POIN
-        </h1>
-        <div class="text-purple-400 text-sm font-bold tracking-widest mb-4">
-          EPIC BOSS EDITION
+        <!-- Pengumuman Teks (Naik Level / Bos Muncul) -->
+        <div id="levelAnnouncer" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl md:text-7xl font-black text-white pointer-events-none opacity-0">
+            LEVEL 1
         </div>
-        <p class="text-yellow-400 text-xl mb-2 font-bold drop-shadow-md">
-          Skor Tertinggi: <span id="startHighScore">0</span>
-        </p>
-        <p class="text-slate-400 text-base mb-8 text-center max-w-md">
-          Kumpulkan poin, capai Skor 300 untuk melawan
-          <span class="text-rose-400 font-bold">Final Boss</span>. <br />Lompat
-          ganda dengan Klik/Spasi/Sentuh.
-        </p>
-        <button
-          id="startBtn"
-          class="interactive btn-glow bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest"
-        >
-          Mulai Misi
-        </button>
-      </div>
 
-      <!-- Layar Game Over -->
-      <div
-        id="gameOverMenu"
-        class="interactive hidden flex-col items-center bg-slate-900/90 p-10 rounded-3xl border border-rose-500/50 backdrop-blur-sm shadow-[0_0_40px_rgba(225,29,72,0.3)]"
-      >
-        <h2 class="text-5xl font-black text-rose-500 mb-2 text-glow">
-          MISI GAGAL
-        </h2>
-        <p class="text-slate-300 text-xl mb-2">Skor Akhir Anda:</p>
-        <div
-          id="finalScore"
-          class="text-7xl font-black text-cyan-400 mb-2 text-glow"
-        >
-          0
+        <!-- Menu Utama -->
+        <div id="startMenu" class="interactive flex flex-col items-center bg-slate-900/80 p-10 rounded-3xl border border-slate-700 backdrop-blur-sm">
+            <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2 drop-shadow-lg text-center">LOMPAT POIN</h1>
+            <div class="text-purple-400 text-sm font-bold tracking-widest mb-4">EPIC BOSS EDITION</div>
+            <p class="text-yellow-400 text-xl mb-2 font-bold drop-shadow-md">Skor Tertinggi: <span id="startHighScore">0</span></p>
+            <p class="text-slate-400 text-base mb-8 text-center max-w-md">Kumpulkan poin, capai Skor 300 untuk melawan <span class="text-rose-400 font-bold">Final Boss</span>. <br>Lompat ganda dengan Klik/Spasi/Sentuh.</p>
+            <button id="startBtn" class="interactive btn-glow bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest">
+                Mulai Misi
+            </button>
         </div>
-        <button
-          id="restartBtn"
-          class="interactive btn-glow bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest mt-6"
-        >
-          Coba Lagi
-        </button>
-      </div>
 
-      <!-- Layar Kemenangan (VICTORY) -->
-      <div
-        id="gameWinMenu"
-        class="interactive hidden flex-col items-center bg-slate-900/90 p-10 rounded-3xl border border-cyan-500/50 backdrop-blur-sm shadow-[0_0_50px_rgba(34,211,238,0.4)]"
-      >
-        <h2 class="text-5xl font-black text-cyan-400 mb-2 text-glow">
-          MISI SELESAI!
-        </h2>
-        <p class="text-yellow-300 text-2xl font-bold mb-4 text-glow">
-          Bos Final Berhasil Dihancurkan
-        </p>
-        <p class="text-slate-300 text-xl mb-2">
-          Skor Akhir (Bonus Kemenangan):
-        </p>
-        <div
-          id="winScore"
-          class="text-7xl font-black text-yellow-400 mb-8 text-glow"
-        >
-          0
+        <!-- Layar Game Over -->
+        <div id="gameOverMenu" class="interactive hidden flex-col items-center bg-slate-900/90 p-10 rounded-3xl border border-rose-500/50 backdrop-blur-sm shadow-[0_0_40px_rgba(225,29,72,0.3)]">
+            <h2 class="text-5xl font-black text-rose-500 mb-2 text-glow">MISI GAGAL</h2>
+            <p class="text-slate-300 text-xl mb-2">Skor Akhir Anda:</p>
+            <div id="finalScore" class="text-7xl font-black text-cyan-400 mb-2 text-glow">0</div>
+            <button id="restartBtn" class="interactive btn-glow bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest mt-6">
+                Coba Lagi
+            </button>
         </div>
-        <button
-          id="winRestartBtn"
-          class="interactive btn-glow bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest"
-        >
-          Main Lagi
-        </button>
-      </div>
+
+        <!-- Layar Kemenangan (VICTORY) -->
+        <div id="gameWinMenu" class="interactive hidden flex-col items-center bg-slate-900/90 p-10 rounded-3xl border border-cyan-500/50 backdrop-blur-sm shadow-[0_0_50px_rgba(34,211,238,0.4)]">
+            <h2 class="text-5xl font-black text-cyan-400 mb-2 text-glow">MISI SELESAI!</h2>
+            <p class="text-yellow-300 text-2xl font-bold mb-4 text-glow">Bos Final Berhasil Dihancurkan</p>
+            <p class="text-slate-300 text-xl mb-2">Skor Akhir (Bonus Kemenangan):</p>
+            <div id="winScore" class="text-7xl font-black text-yellow-400 mb-8 text-glow">0</div>
+            <button id="winRestartBtn" class="interactive btn-glow bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-4 px-10 rounded-full text-xl uppercase tracking-widest">
+                Main Lagi
+            </button>
+        </div>
+
     </div>
 
     <script>
-      const canvas = document.getElementById("gameCanvas");
-      const ctx = canvas.getContext("2d");
-      const body = document.body;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const body = document.body;
+        
+        // Referensi UI
+        const ui = {
+            start: document.getElementById('startMenu'),
+            over: document.getElementById('gameOverMenu'),
+            win: document.getElementById('gameWinMenu'),
+            hud: document.getElementById('hud'),
+            score: document.getElementById('scoreDisplay'),
+            level: document.getElementById('levelDisplay'),
+            highScoreHud: document.getElementById('highScoreHudDisplay'),
+            startHigh: document.getElementById('startHighScore'),
+            finalScore: document.getElementById('finalScore'),
+            winScore: document.getElementById('winScore'),
+            announcer: document.getElementById('levelAnnouncer'),
+            bossUI: document.getElementById('bossUI'),
+            bossHpBar: document.getElementById('bossHealthBar')
+        };
 
-      // Referensi UI
-      const ui = {
-        start: document.getElementById("startMenu"),
-        over: document.getElementById("gameOverMenu"),
-        win: document.getElementById("gameWinMenu"),
-        hud: document.getElementById("hud"),
-        score: document.getElementById("scoreDisplay"),
-        level: document.getElementById("levelDisplay"),
-        highScoreHud: document.getElementById("highScoreHudDisplay"),
-        startHigh: document.getElementById("startHighScore"),
-        finalScore: document.getElementById("finalScore"),
-        winScore: document.getElementById("winScore"),
-        announcer: document.getElementById("levelAnnouncer"),
-        bossUI: document.getElementById("bossUI"),
-        bossHpBar: document.getElementById("bossHealthBar"),
-      };
-
-      // Resize
-      let width, height;
-      function resizeCanvas() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-      }
-      window.addEventListener("resize", resizeCanvas);
-      resizeCanvas();
-
-      // Konfigurasi Level (Warna, Kecepatan, dll)
-      const levelConfigs = [
-        {
-          threshold: 0,
-          speed: 6,
-          bg: "#0f172a",
-          line: "#334155",
-          title: "LEVEL 1",
-        },
-        {
-          threshold: 100,
-          speed: 8,
-          bg: "#1e1b4b",
-          line: "#4338ca",
-          title: "LEVEL 2",
-        }, // Indigo
-        {
-          threshold: 200,
-          speed: 10,
-          bg: "#3f0f1c",
-          line: "#be123c",
-          title: "LEVEL 3",
-        }, // Rose/Merah
-        {
-          threshold: 300,
-          speed: 12,
-          bg: "#000000",
-          line: "#991b1b",
-          title: "PERINGATAN: BOS FINAL!",
-          isBoss: true,
-        },
-      ];
-
-      // State Global
-      let gameState = "START";
-      let score = 0;
-      let highScore = localStorage.getItem("lompatPoinBossHighScore") || 0;
-      let gameSpeed = 6;
-      let frameCount = 0;
-      let animationId;
-      let currentLevelIndex = 0;
-
-      // Entitas
-      let player;
-      let obstacles = [];
-      let points = [];
-      let particles = [];
-      let energyCores = []; // Item penyerang bos
-      let playerMissiles = []; // Peluru dari player ke bos
-
-      // Variabel Bos
-      let bossActive = false;
-      let boss = null;
-      let bossProjectiles = [];
-
-      const groundHeight = 100;
-
-      ui.startHigh.innerText = highScore;
-
-      class Player {
-        constructor() {
-          this.size = 30;
-          this.x = width * 0.15;
-          this.y = height - groundHeight - this.size;
-          this.vy = 0;
-          this.gravity = 0.65;
-          this.jumpPower = -13;
-          this.jumps = 0;
-          this.maxJumps = 2;
-          this.color = "#22d3ee"; // Cyan
-          this.trail = [];
+        // Resize
+        let width, height;
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
         }
-        jump() {
-          if (this.jumps < this.maxJumps) {
-            this.vy = this.jumpPower;
-            this.jumps++;
-            createParticles(
-              this.x + this.size / 2,
-              this.y + this.size,
-              this.color,
-              6,
-              3,
-            );
-          }
-        }
-        update() {
-          this.y += this.vy;
-          this.vy += this.gravity;
-          if (this.y + this.size >= height - groundHeight) {
-            this.y = height - groundHeight - this.size;
-            this.vy = 0;
-            this.jumps = 0;
-          }
-          this.trail.push({ x: this.x, y: this.y });
-          if (this.trail.length > 10) this.trail.shift();
-        }
-        draw() {
-          this.trail.forEach((t, i) => {
-            ctx.fillStyle = `rgba(34, 211, 238, ${i / 20})`;
-            ctx.fillRect(t.x, t.y, this.size, this.size);
-          });
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = this.color;
-          ctx.fillStyle = this.color;
-          ctx.fillRect(this.x, this.y, this.size, this.size);
-          ctx.shadowBlur = 0;
-        }
-      }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-      class Particle {
-        constructor(x, y, color, speed, size) {
-          this.x = x;
-          this.y = y;
-          this.color = color;
-          this.size = Math.random() * size + 2;
-          this.vx = (Math.random() - 0.5) * speed;
-          this.vy = (Math.random() - 0.5) * speed;
-          this.life = 1.0;
-          this.decay = Math.random() * 0.02 + 0.02;
-        }
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          this.life -= this.decay;
-        }
-        draw() {
-          ctx.globalAlpha = Math.max(0, this.life);
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1.0;
-        }
-      }
+        // Konfigurasi Level (Warna, Kecepatan, dll)
+        const levelConfigs = [
+            { threshold: 0, speed: 6, bg: '#0f172a', line: '#334155', title: 'LEVEL 1' }, 
+            { threshold: 100, speed: 8, bg: '#1e1b4b', line: '#4338ca', title: 'LEVEL 2' }, // Indigo
+            { threshold: 200, speed: 10, bg: '#3f0f1c', line: '#be123c', title: 'LEVEL 3' }, // Rose/Merah
+            { threshold: 300, speed: 12, bg: '#000000', line: '#991b1b', title: 'PERINGATAN: BOS FINAL!', isBoss: true } 
+        ];
 
-      function createParticles(x, y, color, speed, amount) {
-        for (let i = 0; i < amount; i++) {
-          particles.push(new Particle(x, y, color, speed, 5));
-        }
-      }
+        // State Global
+        let gameState = 'START'; 
+        let score = 0;
+        let highScore = localStorage.getItem('lompatPoinBossHighScore') || 0;
+        let gameSpeed = 6;
+        let frameCount = 0;
+        let animationId;
+        let currentLevelIndex = 0;
+        
+        // Entitas
+        let player;
+        let obstacles = [];
+        let pits = []; // Lubang api
+        let points = [];
+        let particles = [];
+        let energyCores = []; // Item penyerang bos
+        let playerMissiles = []; // Peluru dari player ke bos
+        
+        // Variabel Bos
+        let bossActive = false;
+        let boss = null;
+        let bossProjectiles = [];
 
-      class Obstacle {
-        constructor() {
-          this.width = 30 + Math.random() * 20;
-          this.height = 40 + Math.random() * 40;
-          this.x = width;
-          this.y = height - groundHeight - this.height;
-          this.color = "#f43f5e"; // Rose
-        }
-        update() {
-          this.x -= gameSpeed;
-        }
-        draw() {
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = this.color;
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.moveTo(this.x, this.y + this.height);
-          ctx.lineTo(this.x + this.width / 2, this.y);
-          ctx.lineTo(this.x + this.width, this.y + this.height);
-          ctx.closePath();
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
+        const groundHeight = 100;
 
-      class PointItem {
-        constructor() {
-          this.size = 20;
-          this.x = width;
-          this.y = height - groundHeight - 60 - Math.random() * 150;
-          this.color = "#eab308"; // Yellow
-          this.angle = 0;
-        }
-        update() {
-          this.x -= gameSpeed;
-          this.angle += 0.05;
-        }
-        draw() {
-          ctx.save();
-          ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-          ctx.rotate(this.angle);
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = this.color;
-          ctx.fillStyle = this.color;
-          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-          ctx.restore();
-        }
-      }
+        ui.startHigh.innerText = highScore;
 
-      class Boss {
-        constructor() {
-          this.size = 120;
-          this.x = width + 200; // Mulai di luar layar
-          this.targetX = width - 150; // Posisi ideal
-          this.y = height / 2 - 100;
-          this.baseY = this.y;
-          this.color = "#e11d48"; // Rose gelap menakutkan
-          this.maxHealth = 100;
-          this.health = 100;
-          this.angle = 0;
+        class Player {
+            constructor() {
+                this.size = 30;
+                this.x = width * 0.15; 
+                this.y = height - groundHeight - this.size;
+                this.vy = 0;
+                this.gravity = 0.65;
+                this.jumpPower = -13;
+                this.jumps = 0;
+                this.maxJumps = 2;
+                this.color = '#22d3ee'; // Cyan
+                this.trail = [];
+            }
+            jump() {
+                if (this.jumps < this.maxJumps) {
+                    this.vy = this.jumpPower;
+                    this.jumps++;
+                    createParticles(this.x + this.size/2, this.y + this.size, this.color, 6, 3);
+                }
+            }
+            update() {
+                // Cek apakah pemain berada di atas lubang
+                let overPit = false;
+                for (let i = 0; i < pits.length; i++) {
+                    let pit = pits[i];
+                    let centerX = this.x + this.size / 2;
+                    // Beri margin agar tidak terlalu mudah jatuh di pinggiran
+                    if (centerX > pit.x + 10 && centerX < pit.x + pit.width - 10) {
+                        overPit = true;
+                        break;
+                    }
+                }
+
+                this.y += this.vy;
+                this.vy += this.gravity;
+                
+                let groundY = height - groundHeight - this.size;
+
+                // Fisika lantai atau jatuh ke jurang
+                if (!overPit) {
+                    if (this.y >= groundY) {
+                        this.y = groundY;
+                        this.vy = 0;
+                        this.jumps = 0;
+                    }
+                } else {
+                    // Jika jatuh terlalu dalam ke dalam lubang
+                    if (this.y > groundY + 30 && gameState === 'PLAYING') {
+                        triggerGameOver();
+                    }
+                }
+                
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > 10) this.trail.shift();
+            }
+            draw() {
+                this.trail.forEach((t, i) => {
+                    ctx.fillStyle = `rgba(34, 211, 238, ${i / 20})`;
+                    ctx.fillRect(t.x, t.y, this.size, this.size);
+                });
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.shadowBlur = 0; 
+            }
         }
-        update() {
-          // Muncul dari kanan
-          if (this.x > this.targetX) this.x -= 2;
 
-          // Melayang naik turun
-          this.angle += 0.03;
-          this.y = this.baseY + Math.sin(this.angle) * 80;
-
-          // Tembak secara berkala
-          if (this.x <= this.targetX && frameCount % 70 === 0) {
-            bossProjectiles.push(
-              new BossProjectile(this.x, this.y + this.size / 2),
-            );
-            createParticles(this.x, this.y + this.size / 2, "#ffffff", 5, 10);
-          }
+        class Particle {
+            constructor(x, y, color, speed, size) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * size + 2;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
         }
-        takeDamage(amount) {
-          this.health -= amount;
-          if (this.health < 0) this.health = 0;
 
-          // Update UI Bar
-          ui.bossHpBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
-
-          // Efek kena hit
-          createParticles(
-            this.x + this.size / 2,
-            this.y + this.size / 2,
-            "#22d3ee",
-            10,
-            30,
-          );
-          canvas.classList.add("shake");
-          setTimeout(() => canvas.classList.remove("shake"), 500);
-
-          if (this.health <= 0) {
-            bossDefeated();
-          }
+        function createParticles(x, y, color, speed, amount) {
+            for (let i = 0; i < amount; i++) {
+                particles.push(new Particle(x, y, color, speed, 5));
+            }
         }
-        draw() {
-          ctx.save();
-          ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-          // Rotasi bos pelan
-          ctx.rotate(this.angle * 0.2);
 
-          // Aura bersinar
-          ctx.shadowBlur = 40;
-          ctx.shadowColor = this.color;
+        class Obstacle {
+            constructor() {
+                this.width = 30 + Math.random() * 20;
+                this.height = 40 + Math.random() * 40;
+                this.x = width;
+                this.y = height - groundHeight - this.height;
+                this.color = '#f43f5e'; // Rose
+            }
+            update() { this.x -= gameSpeed; }
+            draw() {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + this.height);
+                ctx.lineTo(this.x + this.width / 2, this.y);
+                ctx.lineTo(this.x + this.width, this.y + this.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
 
-          // Inti segi delapan
-          ctx.fillStyle = "#9f1239"; // Merah gelap
-          ctx.beginPath();
-          const sides = 8;
-          for (let i = 0; i < sides; i++) {
-            let theta = (i / sides) * 2 * Math.PI;
-            let px = (Math.cos(theta) * this.size) / 2;
-            let py = (Math.sin(theta) * this.size) / 2;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.fill();
+        class FireObstacle {
+            constructor() {
+                this.width = 30 + Math.random() * 15;
+                this.height = 50 + Math.random() * 30;
+                this.x = width;
+                this.y = height - groundHeight - this.height;
+                this.particles = [];
+            }
+            update() { 
+                this.x -= gameSpeed; 
+                // Spawn percikan api secara acak
+                if(Math.random() < 0.3) {
+                    this.particles.push({
+                        x: this.x + Math.random() * this.width,
+                        y: this.y + this.height - 10,
+                        vy: -(2 + Math.random() * 3),
+                        size: 3 + Math.random() * 6,
+                        life: 1.0
+                    });
+                }
+                // Update posisi partikel
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.x -= gameSpeed;
+                    p.y += p.vy;
+                    p.life -= 0.05;
+                    if (p.life <= 0) this.particles.splice(i, 1);
+                }
+            }
+            draw() {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#f97316';
+                
+                // Base api (Merah)
+                ctx.fillStyle = '#ef4444'; 
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width/2, this.y - Math.random() * 15); // Ujung api berkedip
+                ctx.quadraticCurveTo(this.x + this.width, this.y + this.height/2, this.x + this.width, this.y + this.height);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.quadraticCurveTo(this.x, this.y + this.height/2, this.x + this.width/2, this.y - Math.random() * 15);
+                ctx.fill();
 
-          // Mata tengah (Core)
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = "#ffffff";
-          ctx.fillStyle = "#fecdd3";
-          ctx.beginPath();
-          ctx.arc(0, 0, this.size / 5, 0, Math.PI * 2);
-          ctx.fill();
+                // Inti api (Kuning terang)
+                ctx.fillStyle = '#eab308'; 
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width/2, this.y + 15 - Math.random() * 10);
+                ctx.quadraticCurveTo(this.x + this.width - 8, this.y + this.height - 5, this.x + this.width - 8, this.y + this.height);
+                ctx.lineTo(this.x + 8, this.y + this.height);
+                ctx.quadraticCurveTo(this.x + 8, this.y + this.height - 5, this.x + this.width/2, this.y + 15 - Math.random() * 10);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
 
-          ctx.restore();
+                // Percikan partikel terbang
+                this.particles.forEach(p => {
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1.0;
+            }
         }
-      }
 
-      class BossProjectile {
-        constructor(startX, startY) {
-          this.x = startX;
-          this.y = startY;
-          this.size = 15;
-          this.vx = -(gameSpeed + 4); // Lebih cepat dari tanah
-          this.color = "#fb7185";
-        }
-        update() {
-          this.x += this.vx;
-        }
-        draw() {
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = "#e11d48";
-          ctx.fillStyle = this.color;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
+        class LavaPit {
+            constructor() {
+                this.width = 100 + Math.random() * 80; // Lebar lubang 100-180
+                this.x = width;
+                this.y = height - groundHeight;
+                this.height = groundHeight; 
+                this.particles = [];
+            }
+            update() {
+                this.x -= gameSpeed;
+                // Partikel percikan lava dari dalam jurang
+                if (Math.random() < 0.2) {
+                    this.particles.push({
+                        x: this.x + 10 + Math.random() * (this.width - 20),
+                        y: this.y + 30,
+                        vy: -(2 + Math.random() * 4),
+                        size: 4 + Math.random() * 8,
+                        life: 1.0,
+                        color: Math.random() > 0.5 ? '#f97316' : '#ef4444'
+                    });
+                }
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.x -= gameSpeed; 
+                    p.y += p.vy;
+                    p.life -= 0.05;
+                    if (p.life <= 0) this.particles.splice(i, 1);
+                }
+            }
+            draw() {
+                // Background hitam untuk menciptakan kedalaman
+                ctx.fillStyle = '#020617'; 
+                ctx.fillRect(this.x, this.y, this.width, this.height);
 
-      class EnergyCore {
-        // Item untuk menyerang bos
-        constructor() {
-          this.size = 25;
-          this.x = width;
-          this.y = height - groundHeight - 80 - Math.random() * 100;
-          this.color = "#3b82f6"; // Blue
-          this.angle = 0;
-        }
-        update() {
-          this.x -= gameSpeed;
-          this.angle -= 0.1;
-        }
-        draw() {
-          ctx.save();
-          ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-          ctx.rotate(this.angle);
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = "#60a5fa";
-          ctx.fillStyle = this.color;
-          // Hexagon shape
-          ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            ctx.lineTo(
-              (Math.cos((i * Math.PI) / 3) * this.size) / 2,
-              (Math.sin((i * Math.PI) / 3) * this.size) / 2,
-            );
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-      }
+                // Dasar jurang diisi lava gelap
+                ctx.fillStyle = '#7f1d1d'; 
+                ctx.fillRect(this.x, this.y + 40, this.width, this.height - 40);
 
-      class PlayerMissile {
-        // Proyektil dari player menabrak bos
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.size = 10;
-          this.color = "#22d3ee"; // Cyan
-          this.trail = [];
-        }
-        update() {
-          if (!boss) return;
-          // Homing ke arah bos
-          let targetX = boss.x + boss.size / 2;
-          let targetY = boss.y + boss.size / 2;
-          let dx = targetX - this.x;
-          let dy = targetY - this.y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
+                // Ombak api bergelombang di atas lava
+                ctx.fillStyle = '#ea580c';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y + 40);
+                for (let px = 0; px <= this.width; px += 15) {
+                    let flicker = Math.random() * 15;
+                    ctx.lineTo(this.x + px, this.y + 40 - flicker);
+                }
+                ctx.lineTo(this.x + this.width, this.y + 40);
+                ctx.fill();
 
-          this.x += (dx / distance) * 15;
-          this.y += (dy / distance) * 15;
-
-          this.trail.push({ x: this.x, y: this.y });
-          if (this.trail.length > 5) this.trail.shift();
+                // Render partikel yang naik ke atas
+                this.particles.forEach(p => {
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1.0;
+            }
         }
-        draw() {
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = this.color;
-          ctx.fillStyle = this.color;
-          this.trail.forEach((t) => {
+
+        class PointItem {
+            constructor() {
+                this.size = 20;
+                this.x = width;
+                this.y = height - groundHeight - 60 - Math.random() * 150; 
+                this.color = '#eab308'; // Yellow
+                this.angle = 0;
+            }
+            update() {
+                this.x -= gameSpeed;
+                this.angle += 0.05;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.size/2, this.y + this.size/2);
+                ctx.rotate(this.angle);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        class Boss {
+            constructor() {
+                this.size = 120;
+                this.x = width + 200; // Mulai di luar layar
+                this.targetX = width - 150; // Posisi ideal
+                this.y = height/2 - 100;
+                this.baseY = this.y;
+                this.color = '#e11d48'; // Rose gelap menakutkan
+                this.maxHealth = 100;
+                this.health = 100;
+                this.angle = 0;
+            }
+            update() {
+                // Muncul dari kanan
+                if(this.x > this.targetX) this.x -= 2;
+                
+                // Melayang naik turun
+                this.angle += 0.03;
+                this.y = this.baseY + Math.sin(this.angle) * 80;
+
+                // Tembak secara berkala
+                if(this.x <= this.targetX && frameCount % 70 === 0) {
+                    bossProjectiles.push(new BossProjectile(this.x, this.y + this.size/2));
+                    createParticles(this.x, this.y + this.size/2, '#ffffff', 5, 10);
+                }
+            }
+            takeDamage(amount) {
+                this.health -= amount;
+                if(this.health < 0) this.health = 0;
+                
+                // Update UI Bar
+                ui.bossHpBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
+                
+                // Efek kena hit
+                createParticles(this.x + this.size/2, this.y + this.size/2, '#22d3ee', 10, 30);
+                canvas.classList.add('shake');
+                setTimeout(() => canvas.classList.remove('shake'), 500);
+
+                if(this.health <= 0) {
+                    bossDefeated();
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.size/2, this.y + this.size/2);
+                // Rotasi bos pelan
+                ctx.rotate(this.angle * 0.2);
+                
+                // Aura bersinar
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = this.color;
+                
+                // Inti segi delapan
+                ctx.fillStyle = '#9f1239'; // Merah gelap
+                ctx.beginPath();
+                const sides = 8;
+                for (let i = 0; i < sides; i++) {
+                    let theta = (i / sides) * 2 * Math.PI;
+                    let px = Math.cos(theta) * this.size/2;
+                    let py = Math.sin(theta) * this.size/2;
+                    if(i===0) ctx.moveTo(px,py);
+                    else ctx.lineTo(px,py);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                // Mata tengah (Core)
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillStyle = '#fecdd3';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size/5, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        class BossProjectile {
+            constructor(startX, startY) {
+                this.x = startX;
+                this.y = startY;
+                this.size = 15;
+                this.vx = -(gameSpeed + 4); // Lebih cepat dari tanah
+                this.color = '#fb7185';
+            }
+            update() { this.x += this.vx; }
+            draw() {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#e11d48';
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class EnergyCore { // Item untuk menyerang bos
+            constructor() {
+                this.size = 25;
+                this.x = width;
+                this.y = height - groundHeight - 80 - Math.random() * 100;
+                this.color = '#3b82f6'; // Blue
+                this.angle = 0;
+            }
+            update() {
+                this.x -= gameSpeed;
+                this.angle -= 0.1;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.size/2, this.y + this.size/2);
+                ctx.rotate(this.angle);
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#60a5fa';
+                ctx.fillStyle = this.color;
+                // Hexagon shape
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    ctx.lineTo(Math.cos(i * Math.PI / 3) * this.size/2, Math.sin(i * Math.PI / 3) * this.size/2);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class PlayerMissile { // Proyektil dari player menabrak bos
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = 10;
+                this.color = '#22d3ee'; // Cyan
+                this.trail = [];
+            }
+            update() {
+                if(!boss) return;
+                // Homing ke arah bos
+                let targetX = boss.x + boss.size/2;
+                let targetY = boss.y + boss.size/2;
+                let dx = targetX - this.x;
+                let dy = targetY - this.y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+                
+                this.x += (dx / distance) * 15;
+                this.y += (dy / distance) * 15;
+                
+                this.trail.push({x: this.x, y: this.y});
+                if(this.trail.length > 5) this.trail.shift();
+            }
+            draw() {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                this.trail.forEach(t => {
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, this.size/2, 0, Math.PI*2);
+                    ctx.fill();
+                });
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function triggerLevelUp(newIndex) {
+            currentLevelIndex = newIndex;
+            let config = levelConfigs[newIndex];
+            
+            // Ubah Warna Background via CSS Body untuk transisi halus
+            body.style.backgroundColor = config.bg;
+            gameSpeed = config.speed;
+            ui.level.innerText = newIndex + 1;
+
+            // Tampilkan Pengumuman Teks
+            ui.announcer.innerText = config.title;
+            ui.announcer.classList.remove('level-announce');
+            // Force reflow agar animasi bisa restart
+            void ui.announcer.offsetWidth; 
+            ui.announcer.classList.add('level-announce');
+            ui.announcer.style.color = config.isBoss ? '#f43f5e' : '#ffffff';
+
+            if (config.isBoss) {
+                bossActive = true;
+                boss = new Boss();
+                ui.bossUI.classList.remove('hidden');
+                ui.bossUI.classList.add('flex');
+                ui.bossHpBar.style.width = '100%';
+                ui.level.innerText = 'BOSS';
+                // Hapus obstacle reguler agar fokus bertarung
+                obstacles = []; 
+                points = [];
+            }
+        }
+
+        function spawnObjects() {
+            if (!bossActive) {
+                // Mode Normal Level 1-3
+                if (frameCount % Math.floor(Math.random() * 50 + 60) === 0) {
+                    let rand = Math.random();
+                    // Campur kemunculan: 25% Lubang, 30% Api, 45% Rintangan Biasa
+                    if (rand < 0.25 && frameCount > 200) { 
+                        // Lubang baru muncul setelah bermain agak lama agar adil
+                        pits.push(new LavaPit());
+                    } else if (rand < 0.55) {
+                        obstacles.push(new FireObstacle());
+                    } else {
+                        obstacles.push(new Obstacle());
+                    }
+                }
+                if (frameCount % Math.floor(Math.random() * 40 + 40) === 0) {
+                    let canSpawn = obstacles.length === 0 || (width - obstacles[obstacles.length - 1].x > 150);
+                    // Cegah poin spawn persis di atas jurang agar pemain tidak tertipu
+                    let noPitNearby = pits.every(p => p.x < width - 100 || p.x > width + 100);
+                    if(canSpawn && noPitNearby) points.push(new PointItem());
+                }
+            } else {
+                // Mode Bos: Hanya spawn Inti Energi (Senjata) sesekali
+                if (frameCount % 90 === 0) {
+                    energyCores.push(new EnergyCore());
+                }
+            }
+        }
+
+        function checkCollisions() {
+            let pRight = player.x + player.size;
+            let pBottom = player.y + player.size;
+
+            // 1. Tabrakan dengan Rintangan (Mode Normal)
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                if (player.x < obs.x + obs.width - 5 && pRight > obs.x + 5 &&
+                    player.y < obs.y + obs.height && pBottom > obs.y + 10) {
+                    triggerGameOver();
+                    return;
+                }
+            }
+
+            // 2. Tabrakan dengan Proyektil Bos
+            for (let i = 0; i < bossProjectiles.length; i++) {
+                let proj = bossProjectiles[i];
+                if (player.x < proj.x + proj.size && pRight > proj.x - proj.size &&
+                    player.y < proj.y + proj.size && pBottom > proj.y - proj.size) {
+                    triggerGameOver();
+                    return;
+                }
+            }
+
+            // 3. Ambil Poin Normal
+            for (let i = points.length - 1; i >= 0; i--) {
+                let pt = points[i];
+                if (player.x < pt.x + pt.size && pRight > pt.x &&
+                    player.y < pt.y + pt.size && pBottom > pt.y) {
+                    score += 10;
+                    ui.score.innerText = score;
+                    createParticles(pt.x + pt.size/2, pt.y + pt.size/2, pt.color, 8, 15);
+                    points.splice(i, 1);
+                    
+                    // Cek Naik Level
+                    if (!bossActive && currentLevelIndex < levelConfigs.length - 1) {
+                        let nextConfig = levelConfigs[currentLevelIndex + 1];
+                        if (score >= nextConfig.threshold) {
+                            triggerLevelUp(currentLevelIndex + 1);
+                        }
+                    }
+                }
+            }
+
+            // 4. Ambil Inti Energi (Mode Bos)
+            for (let i = energyCores.length - 1; i >= 0; i--) {
+                let core = energyCores[i];
+                if (player.x < core.x + core.size && pRight > core.x &&
+                    player.y < core.y + core.size && pBottom > core.y) {
+                    
+                    // Tambah skor sedikit
+                    score += 5;
+                    ui.score.innerText = score;
+                    createParticles(core.x, core.y, core.color, 10, 20);
+                    
+                    // Tembakkan rudal ke bos!
+                    playerMissiles.push(new PlayerMissile(player.x + player.size, player.y + player.size/2));
+                    
+                    energyCores.splice(i, 1);
+                }
+            }
+
+            // 5. Rudal Player mengenai Bos
+            if (bossActive && boss) {
+                for(let i = playerMissiles.length - 1; i >= 0; i--) {
+                    let m = playerMissiles[i];
+                    // Hitbox bos simpel (kotak)
+                    if(m.x > boss.x && m.x < boss.x + boss.size &&
+                       m.y > boss.y && m.y < boss.y + boss.size) {
+                        boss.takeDamage(20); // 5 kali hit (100 / 20) = Bos mati
+                        playerMissiles.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        function drawBackground() {
+            // Langit gelap otomatis dari CSS Body color. Kita gambar elemen grid/lantai saja.
+            let config = levelConfigs[currentLevelIndex];
+            
+            // Garis lantai bersinar
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = config.line;
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; // Lantai agak gelap transparant
+            ctx.fillRect(0, height - groundHeight, width, groundHeight);
+            
+            // Garis batas atas lantai
+            ctx.strokeStyle = config.line;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(t.x, t.y, this.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-          });
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-
-      function triggerLevelUp(newIndex) {
-        currentLevelIndex = newIndex;
-        let config = levelConfigs[newIndex];
-
-        // Ubah Warna Background via CSS Body untuk transisi halus
-        body.style.backgroundColor = config.bg;
-        gameSpeed = config.speed;
-        ui.level.innerText = newIndex + 1;
-
-        // Tampilkan Pengumuman Teks
-        ui.announcer.innerText = config.title;
-        ui.announcer.classList.remove("level-announce");
-        // Force reflow agar animasi bisa restart
-        void ui.announcer.offsetWidth;
-        ui.announcer.classList.add("level-announce");
-        ui.announcer.style.color = config.isBoss ? "#f43f5e" : "#ffffff";
-
-        if (config.isBoss) {
-          bossActive = true;
-          boss = new Boss();
-          ui.bossUI.classList.remove("hidden");
-          ui.bossUI.classList.add("flex");
-          ui.bossHpBar.style.width = "100%";
-          ui.level.innerText = "BOSS";
-          // Hapus obstacle reguler agar fokus bertarung
-          obstacles = [];
-          points = [];
-        }
-      }
-
-      function spawnObjects() {
-        if (!bossActive) {
-          // Mode Normal Level 1-3
-          if (frameCount % Math.floor(Math.random() * 50 + 60) === 0) {
-            obstacles.push(new Obstacle());
-          }
-          if (frameCount % Math.floor(Math.random() * 40 + 40) === 0) {
-            let canSpawn =
-              obstacles.length === 0 ||
-              width - obstacles[obstacles.length - 1].x > 150;
-            if (canSpawn) points.push(new PointItem());
-          }
-        } else {
-          // Mode Bos: Hanya spawn Inti Energi (Senjata) sesekali
-          if (frameCount % 90 === 0) {
-            energyCores.push(new EnergyCore());
-          }
-        }
-      }
-
-      function checkCollisions() {
-        let pRight = player.x + player.size;
-        let pBottom = player.y + player.size;
-
-        // 1. Tabrakan dengan Rintangan (Mode Normal)
-        for (let i = 0; i < obstacles.length; i++) {
-          let obs = obstacles[i];
-          if (
-            player.x < obs.x + obs.width - 5 &&
-            pRight > obs.x + 5 &&
-            player.y < obs.y + obs.height &&
-            pBottom > obs.y + 10
-          ) {
-            triggerGameOver();
-            return;
-          }
-        }
-
-        // 2. Tabrakan dengan Proyektil Bos
-        for (let i = 0; i < bossProjectiles.length; i++) {
-          let proj = bossProjectiles[i];
-          if (
-            player.x < proj.x + proj.size &&
-            pRight > proj.x - proj.size &&
-            player.y < proj.y + proj.size &&
-            pBottom > proj.y - proj.size
-          ) {
-            triggerGameOver();
-            return;
-          }
-        }
-
-        // 3. Ambil Poin Normal
-        for (let i = points.length - 1; i >= 0; i--) {
-          let pt = points[i];
-          if (
-            player.x < pt.x + pt.size &&
-            pRight > pt.x &&
-            player.y < pt.y + pt.size &&
-            pBottom > pt.y
-          ) {
-            score += 10;
-            ui.score.innerText = score;
-            createParticles(
-              pt.x + pt.size / 2,
-              pt.y + pt.size / 2,
-              pt.color,
-              8,
-              15,
-            );
-            points.splice(i, 1);
-
-            // Cek Naik Level
-            if (!bossActive && currentLevelIndex < levelConfigs.length - 1) {
-              let nextConfig = levelConfigs[currentLevelIndex + 1];
-              if (score >= nextConfig.threshold) {
-                triggerLevelUp(currentLevelIndex + 1);
-              }
+            ctx.moveTo(0, height - groundHeight);
+            ctx.lineTo(width, height - groundHeight);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Ornamen grid bergerak cepat (Kecepatan sesuai gameSpeed)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            let offset = (frameCount * gameSpeed) % 100;
+            for(let i = -offset; i < width; i += 100) {
+                ctx.beginPath();
+                ctx.moveTo(i, height - groundHeight);
+                ctx.lineTo(i + 50, height);
+                ctx.stroke();
             }
-          }
         }
 
-        // 4. Ambil Inti Energi (Mode Bos)
-        for (let i = energyCores.length - 1; i >= 0; i--) {
-          let core = energyCores[i];
-          if (
-            player.x < core.x + core.size &&
-            pRight > core.x &&
-            player.y < core.y + core.size &&
-            pBottom > core.y
-          ) {
-            // Tambah skor sedikit
-            score += 5;
-            ui.score.innerText = score;
-            createParticles(core.x, core.y, core.color, 10, 20);
+        function update() {
+            if (gameState !== 'PLAYING') return;
 
-            // Tembakkan rudal ke bos!
-            playerMissiles.push(
-              new PlayerMissile(
-                player.x + player.size,
-                player.y + player.size / 2,
-              ),
-            );
+            // Transparansi penuh untuk membersihkan layar frame sebelumnya
+            ctx.clearRect(0, 0, width, height);
+            drawBackground();
 
-            energyCores.splice(i, 1);
-          }
-        }
+            player.update();
+            player.draw();
 
-        // 5. Rudal Player mengenai Bos
-        if (bossActive && boss) {
-          for (let i = playerMissiles.length - 1; i >= 0; i--) {
-            let m = playerMissiles[i];
-            // Hitbox bos simpel (kotak)
-            if (
-              m.x > boss.x &&
-              m.x < boss.x + boss.size &&
-              m.y > boss.y &&
-              m.y < boss.y + boss.size
-            ) {
-              boss.takeDamage(20); // 5 kali hit (100 / 20) = Bos mati
-              playerMissiles.splice(i, 1);
+            spawnObjects();
+
+            // Update Arrays (tambahkan pits ke iterasi utama)
+            [obstacles, pits, points, energyCores, bossProjectiles, particles, playerMissiles].forEach(arr => {
+                for (let i = arr.length - 1; i >= 0; i--) {
+                    arr[i].update();
+                    arr[i].draw();
+                    
+                    // Cleanup objek luar layar
+                    if (arr[i].x + (arr[i].width || arr[i].size || 0) < -50 || arr[i].life <= 0) {
+                        arr.splice(i, 1);
+                    }
+                }
+            });
+
+            if (bossActive && boss) {
+                boss.update();
+                boss.draw();
             }
-          }
+
+            checkCollisions();
+
+            frameCount++;
+            animationId = requestAnimationFrame(update);
         }
-      }
 
-      function drawBackground() {
-        // Langit gelap otomatis dari CSS Body color. Kita gambar elemen grid/lantai saja.
-        let config = levelConfigs[currentLevelIndex];
-
-        // Garis lantai bersinar
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = config.line;
-        ctx.fillStyle = "rgba(0,0,0,0.5)"; // Lantai agak gelap transparant
-        ctx.fillRect(0, height - groundHeight, width, groundHeight);
-
-        // Garis batas atas lantai
-        ctx.strokeStyle = config.line;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(0, height - groundHeight);
-        ctx.lineTo(width, height - groundHeight);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Ornamen grid bergerak cepat (Kecepatan sesuai gameSpeed)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.lineWidth = 1;
-        let offset = (frameCount * gameSpeed) % 100;
-        for (let i = -offset; i < width; i += 100) {
-          ctx.beginPath();
-          ctx.moveTo(i, height - groundHeight);
-          ctx.lineTo(i + 50, height);
-          ctx.stroke();
+        function saveHighScore(finalS) {
+            if (finalS > highScore) {
+                highScore = finalS;
+                localStorage.setItem('lompatPoinBossHighScore', highScore);
+            }
         }
-      }
 
-      function update() {
-        if (gameState !== "PLAYING") return;
+        function startGame() {
+            player = new Player();
+            obstacles = [];
+            pits = []; // Reset jurang
+            points = [];
+            particles = [];
+            energyCores = [];
+            bossProjectiles = [];
+            playerMissiles = [];
+            
+            bossActive = false;
+            boss = null;
+            score = 0;
+            frameCount = 0;
+            
+            // Mulai dari level 1
+            triggerLevelUp(0);
+            
+            ui.score.innerText = score;
+            ui.highScoreHud.innerText = highScore;
+            
+            gameState = 'PLAYING';
+            ui.start.classList.add('hidden');
+            ui.over.classList.add('hidden');
+            ui.win.classList.add('hidden');
+            ui.bossUI.classList.add('hidden');
+            ui.hud.classList.remove('hidden');
+            
+            if (animationId) cancelAnimationFrame(animationId);
+            update();
+        }
 
-        // Transparansi penuh untuk membersihkan layar frame sebelumnya
-        ctx.clearRect(0, 0, width, height);
+        function bossDefeated() {
+            gameState = 'VICTORY';
+            // Ledakan Masif Bos
+            createParticles(boss.x + boss.size/2, boss.y + boss.size/2, '#ffffff', 20, 100);
+            createParticles(boss.x + boss.size/2, boss.y + boss.size/2, '#f43f5e', 25, 100);
+            
+            // Bonus Kemenangan
+            score += 500; 
+            saveHighScore(score);
+
+            setTimeout(() => {
+                cancelAnimationFrame(animationId);
+                ctx.clearRect(0, 0, width, height);
+                drawBackground();
+                particles.forEach(p => { p.update(); p.draw(); }); // Biarkan partikel selesai
+                
+                ui.winScore.innerText = score;
+                ui.hud.classList.add('hidden');
+                ui.bossUI.classList.add('hidden');
+                ui.win.classList.remove('hidden');
+                ui.win.classList.add('flex');
+            }, 1000);
+        }
+
+        function triggerGameOver() {
+            gameState = 'GAMEOVER';
+            cancelAnimationFrame(animationId);
+            saveHighScore(score);
+            
+            // Efek kematian player
+            createParticles(player.x + player.size/2, player.y + player.size/2, player.color, 15, 50);
+            
+            // Gambar frame terakhir statis
+            ctx.clearRect(0, 0, width, height);
+            drawBackground();
+            if(boss) boss.draw();
+            obstacles.forEach(o => o.draw());
+            bossProjectiles.forEach(p => p.draw());
+            particles.forEach(p => p.draw());
+
+            ui.finalScore.innerText = score;
+            ui.hud.classList.add('hidden');
+            ui.bossUI.classList.add('hidden');
+            
+            setTimeout(() => {
+                ui.over.classList.remove('hidden');
+                ui.over.classList.add('flex');
+            }, 600);
+        }
+
+        function handleInput(e) {
+            if(e.type === 'keydown' && e.code === 'Space') e.preventDefault();
+            if(e.type === 'touchstart' && e.target.tagName !== 'BUTTON') e.preventDefault(); 
+
+            if (gameState === 'PLAYING') {
+                player.jump();
+            } else if ((gameState === 'GAMEOVER' || gameState === 'VICTORY') && e.type === 'keydown' && e.code === 'Space') {
+                startGame();
+            }
+        }
+
+        // Listener
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleInput(e); });
+        canvas.addEventListener('mousedown', handleInput);
+        canvas.addEventListener('touchstart', handleInput, {passive: false});
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+        document.getElementById('winRestartBtn').addEventListener('click', startGame);
+
+        // Gambar background statis awal
+        body.style.backgroundColor = levelConfigs[0].bg;
         drawBackground();
 
-        player.update();
-        player.draw();
-
-        spawnObjects();
-
-        // Update Arrays
-        [
-          obstacles,
-          points,
-          energyCores,
-          bossProjectiles,
-          particles,
-          playerMissiles,
-        ].forEach((arr) => {
-          for (let i = arr.length - 1; i >= 0; i--) {
-            arr[i].update();
-            arr[i].draw();
-
-            // Cleanup objek luar layar
-            if (
-              arr[i].x + (arr[i].width || arr[i].size || 0) < -50 ||
-              arr[i].life <= 0
-            ) {
-              arr.splice(i, 1);
-            }
-          }
-        });
-
-        if (bossActive && boss) {
-          boss.update();
-          boss.draw();
-        }
-
-        checkCollisions();
-
-        frameCount++;
-        animationId = requestAnimationFrame(update);
-      }
-
-      function saveHighScore(finalS) {
-        if (finalS > highScore) {
-          highScore = finalS;
-          localStorage.setItem("lompatPoinBossHighScore", highScore);
-        }
-      }
-
-      function startGame() {
-        player = new Player();
-        obstacles = [];
-        points = [];
-        particles = [];
-        energyCores = [];
-        bossProjectiles = [];
-        playerMissiles = [];
-
-        bossActive = false;
-        boss = null;
-        score = 0;
-        frameCount = 0;
-
-        // Mulai dari level 1
-        triggerLevelUp(0);
-
-        ui.score.innerText = score;
-        ui.highScoreHud.innerText = highScore;
-
-        gameState = "PLAYING";
-        ui.start.classList.add("hidden");
-        ui.over.classList.add("hidden");
-        ui.win.classList.add("hidden");
-        ui.bossUI.classList.add("hidden");
-        ui.hud.classList.remove("hidden");
-
-        if (animationId) cancelAnimationFrame(animationId);
-        update();
-      }
-
-      function bossDefeated() {
-        gameState = "VICTORY";
-        // Ledakan Masif Bos
-        createParticles(
-          boss.x + boss.size / 2,
-          boss.y + boss.size / 2,
-          "#ffffff",
-          20,
-          100,
-        );
-        createParticles(
-          boss.x + boss.size / 2,
-          boss.y + boss.size / 2,
-          "#f43f5e",
-          25,
-          100,
-        );
-
-        // Bonus Kemenangan
-        score += 500;
-        saveHighScore(score);
-
-        setTimeout(() => {
-          cancelAnimationFrame(animationId);
-          ctx.clearRect(0, 0, width, height);
-          drawBackground();
-          particles.forEach((p) => {
-            p.update();
-            p.draw();
-          }); // Biarkan partikel selesai
-
-          ui.winScore.innerText = score;
-          ui.hud.classList.add("hidden");
-          ui.bossUI.classList.add("hidden");
-          ui.win.classList.remove("hidden");
-          ui.win.classList.add("flex");
-        }, 1000);
-      }
-
-      function triggerGameOver() {
-        gameState = "GAMEOVER";
-        cancelAnimationFrame(animationId);
-        saveHighScore(score);
-
-        // Efek kematian player
-        createParticles(
-          player.x + player.size / 2,
-          player.y + player.size / 2,
-          player.color,
-          15,
-          50,
-        );
-
-        // Gambar frame terakhir statis
-        ctx.clearRect(0, 0, width, height);
-        drawBackground();
-        if (boss) boss.draw();
-        obstacles.forEach((o) => o.draw());
-        bossProjectiles.forEach((p) => p.draw());
-        particles.forEach((p) => p.draw());
-
-        ui.finalScore.innerText = score;
-        ui.hud.classList.add("hidden");
-        ui.bossUI.classList.add("hidden");
-
-        setTimeout(() => {
-          ui.over.classList.remove("hidden");
-          ui.over.classList.add("flex");
-        }, 600);
-      }
-
-      function handleInput(e) {
-        if (e.type === "keydown" && e.code === "Space") e.preventDefault();
-        if (e.type === "touchstart" && e.target.tagName !== "BUTTON")
-          e.preventDefault();
-
-        if (gameState === "PLAYING") {
-          player.jump();
-        } else if (
-          (gameState === "GAMEOVER" || gameState === "VICTORY") &&
-          e.type === "keydown" &&
-          e.code === "Space"
-        ) {
-          startGame();
-        }
-      }
-
-      // Listener
-      window.addEventListener("keydown", (e) => {
-        if (e.code === "Space") handleInput(e);
-      });
-      canvas.addEventListener("mousedown", handleInput);
-      canvas.addEventListener("touchstart", handleInput, { passive: false });
-
-      document.getElementById("startBtn").addEventListener("click", startGame);
-      document
-        .getElementById("restartBtn")
-        .addEventListener("click", startGame);
-      document
-        .getElementById("winRestartBtn")
-        .addEventListener("click", startGame);
-
-      // Gambar background statis awal
-      body.style.backgroundColor = levelConfigs[0].bg;
-      drawBackground();
     </script>
-  </body>
+</body>
 </html>
